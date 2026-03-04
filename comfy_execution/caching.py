@@ -156,7 +156,6 @@ class BasicCache:
         self.cache = {}
         self.subcaches = {}
 
-        self._is_subcache = False
         self._current_prompt_id = ''
 
     async def set_prompt(self, dynprompt, node_ids, is_changed_cache):
@@ -241,8 +240,6 @@ class BasicCache:
             CacheValue, _contains_self_unequal, _logger
         )
 
-        if self._is_subcache:
-            return
         if not _has_cache_providers():
             return
         if not self._is_external_cacheable_value(value):
@@ -276,8 +273,6 @@ class BasicCache:
             CacheValue, _contains_self_unequal, _logger
         )
 
-        if self._is_subcache:
-            return None
         if not _has_cache_providers():
             return None
         if _contains_self_unequal(cache_key):
@@ -338,7 +333,6 @@ class BasicCache:
         subcache = self.subcaches.get(subcache_key, None)
         if subcache is None:
             subcache = BasicCache(self.key_class)
-            subcache._is_subcache = True
             subcache._current_prompt_id = self._current_prompt_id
             self.subcaches[subcache_key] = subcache
         await subcache.set_prompt(self.dynprompt, children_ids, self.is_changed_cache)
