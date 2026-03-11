@@ -124,11 +124,35 @@ def _validate_sort_field(requested: str | None) -> str:
     return "created_at"
 
 
+def _build_preview_url_from_view(tags: list[str], user_metadata: dict[str, Any] | None) -> str | None:
+    """Build a /api/view preview URL from asset tags and user_metadata filename."""
+    if not user_metadata:
+        return None
+    filename = user_metadata.get("filename")
+    if not filename:
+        return None
+
+    if "input" in tags:
+        view_type = "input"
+    elif "output" in tags:
+        view_type = "output"
+    else:
+        return None
+
+    subfolder = ""
+    if "/" in filename:
+        subfolder, filename = filename.rsplit("/", 1)
+
+    encoded_filename = urllib.parse.quote(filename, safe="")
+    url = f"/api/view?type={view_type}&filename={encoded_filename}"
+    if subfolder:
+        url += f"&subfolder={urllib.parse.quote(subfolder, safe='')}"
+    return url
+
+
 def _build_asset_response(result: schemas.AssetDetailResult | schemas.UploadResult) -> schemas_out.Asset:
     """Build an Asset response from a service result."""
-    preview_url = None
-    if result.ref.preview_id:
-        preview_url = f"/api/assets/{result.ref.preview_id}/content?disposition=inline"
+    preview_url = _build_preview_url_from_view(result.tags, result.ref.user_metadata)
     return schemas_out.Asset(
         id=result.ref.id,
         name=result.ref.name,
