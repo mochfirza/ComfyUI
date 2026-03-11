@@ -10,7 +10,7 @@ from decimal import Decimal
 from typing import NamedTuple, Sequence
 
 import sqlalchemy as sa
-from sqlalchemy import delete, exists, select
+from sqlalchemy import delete, select
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, noload
@@ -31,7 +31,7 @@ from app.assets.database.queries.common import (
     calculate_rows_per_statement,
     iter_chunks,
 )
-from app.assets.helpers import escape_sql_like_string, get_utc_now, normalize_tags
+from app.assets.helpers import escape_sql_like_string, get_utc_now
 
 
 def _check_is_scalar(v):
