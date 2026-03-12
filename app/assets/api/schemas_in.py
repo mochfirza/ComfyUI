@@ -241,7 +241,6 @@ class UploadAssetSpec(BaseModel):
     - name: display name
     - user_metadata: arbitrary JSON object (optional)
     - hash: optional canonical 'blake3:<hex>' for validation / fast-path
-    - id: optional UUID for idempotent creation
     - mime_type: optional MIME type override
     - preview_id: optional asset ID for preview
 
@@ -254,7 +253,6 @@ class UploadAssetSpec(BaseModel):
     name: str | None = Field(default=None, max_length=512, description="Display Name")
     user_metadata: dict[str, Any] = Field(default_factory=dict)
     hash: str | None = Field(default=None)
-    id: str | None = Field(default=None)
     mime_type: str | None = Field(default=None)
     preview_id: str | None = Field(default=None)
 

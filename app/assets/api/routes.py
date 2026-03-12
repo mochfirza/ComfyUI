@@ -405,29 +405,6 @@ async def upload_asset(request: web.Request) -> web.Response:
             )
 
     try:
-        # Idempotent create: if spec.id is provided, check if reference already exists
-        if spec.id:
-            existing = get_asset_detail(
-                reference_id=spec.id,
-                owner_id=owner_id,
-            )
-            if existing:
-                # Validate that uploaded content matches existing asset
-                if spec.hash and existing.asset and existing.asset.hash != spec.hash:
-                    delete_temp_file_if_exists(parsed.tmp_path)
-                    return _build_error_response(
-                        409,
-                        "HASH_MISMATCH",
-                        "Uploaded file hash does not match existing asset.",
-                    )
-                delete_temp_file_if_exists(parsed.tmp_path)
-                asset = _build_asset_response(existing)
-                payload_out = schemas_out.AssetCreated(
-                    **asset.model_dump(),
-                    created_new=False,
-                )
-                return web.json_response(payload_out.model_dump(mode="json", exclude_none=True), status=200)
-
         # Fast path: hash exists, create AssetReference without writing anything
         if spec.hash and parsed.provided_hash_exists is True:
             result = create_from_hash(
@@ -464,7 +441,6 @@ async def upload_asset(request: web.Request) -> web.Response:
                 expected_hash=spec.hash,
                 mime_type=spec.mime_type,
                 preview_id=spec.preview_id,
-                asset_id=spec.id,
             )
     except AssetValidationError as e:
         delete_temp_file_if_exists(parsed.tmp_path)

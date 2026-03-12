@@ -258,7 +258,6 @@ def upload_from_temp_path(
     expected_hash: str | None = None,
     mime_type: str | None = None,
     preview_id: str | None = None,
-    asset_id: str | None = None,
 ) -> UploadResult:
     try:
         digest, _ = hashing.compute_blake3_hash(temp_path)
