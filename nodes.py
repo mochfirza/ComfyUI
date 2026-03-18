@@ -2202,6 +2202,54 @@ def get_module_name(module_path: str) -> str:
     return base_path
 
 
+def load_node_replacements_json(module_dir: str, module_name: str):
+    """Load node_replacements.json from a custom node directory and register replacements.
+
+    Custom node authors can ship a node_replacements.json file in their repo root
+    to define node replacements declaratively, without writing Python registration code.
+    The file format matches the output of NodeReplace.as_dict(), keyed by old_node_id.
+    """
+    replacements_path = os.path.join(module_dir, "node_replacements.json")
+    if not os.path.isfile(replacements_path):
+        return
+
+    try:
+        with open(replacements_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        if not isinstance(data, dict):
+            logging.warning(f"node_replacements.json in {module_name} must be a JSON object, skipping.")
+            return
+
+        from server import PromptServer
+        from comfy_api.latest._io import NodeReplace
+
+        manager = PromptServer.instance.node_replace_manager
+        count = 0
+        for old_node_id, replacements in data.items():
+            if not isinstance(replacements, list):
+                logging.warning(f"node_replacements.json in {module_name}: value for '{old_node_id}' must be a list, skipping.")
+                continue
+            for entry in replacements:
+                if not isinstance(entry, dict):
+                    continue
+                manager.register(NodeReplace(
+                    new_node_id=entry.get("new_node_id", ""),
+                    old_node_id=entry.get("old_node_id", old_node_id),
+                    old_widget_ids=entry.get("old_widget_ids"),
+                    input_mapping=entry.get("input_mapping"),
+                    output_mapping=entry.get("output_mapping"),
+                ))
+                count += 1
+
+        if count > 0:
+            logging.info(f"Loaded {count} node replacement(s) from {module_name}/node_replacements.json")
+    except json.JSONDecodeError as e:
+        logging.warning(f"Failed to parse node_replacements.json in {module_name}: {e}")
+    except Exception as e:
+        logging.warning(f"Failed to load node_replacements.json from {module_name}: {e}")
+
+
 async def load_custom_node(module_path: str, ignore=set(), module_parent="custom_nodes") -> bool:
     module_name = get_module_name(module_path)
     if os.path.isfile(module_path):
@@ -2225,6 +2273,8 @@ async def load_custom_node(module_path: str, ignore=set(), module_parent="custom
         module_spec.loader.exec_module(module)
 
         LOADED_MODULE_DIRS[module_name] = os.path.abspath(module_dir)
+
+        load_node_replacements_json(module_dir, module_name)
 
         try:
             from comfy_config import config_parser
