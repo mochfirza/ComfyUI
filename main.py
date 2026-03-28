@@ -60,11 +60,9 @@ def _apply_proxy_env_vars():
         if not https_proxy:
             _set_proxy_var('HTTPS_PROXY', http_proxy)
             _set_proxy_var('https_proxy', http_proxy)
-        logging.info("HTTP proxy configured: %s", http_proxy)
     if https_proxy:
         _set_proxy_var('HTTPS_PROXY', https_proxy)
         _set_proxy_var('https_proxy', https_proxy)
-        logging.info("HTTPS proxy configured: %s", https_proxy)
     if no_proxy:
         _set_proxy_var('NO_PROXY', no_proxy)
         _set_proxy_var('no_proxy', no_proxy)
@@ -78,6 +76,11 @@ if __name__ == "__main__":
     _apply_proxy_env_vars()
 
 setup_logger(log_level=args.verbose, use_stdout=args.log_stdout)
+
+if os.environ.get('HTTP_PROXY'):
+    logging.info("HTTP proxy configured: %s", os.environ['HTTP_PROXY'])
+if os.environ.get('HTTPS_PROXY'):
+    logging.info("HTTPS proxy configured: %s", os.environ['HTTPS_PROXY'])
 
 faulthandler.enable(file=sys.stderr, all_threads=False)
 
