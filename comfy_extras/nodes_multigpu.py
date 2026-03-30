@@ -29,8 +29,7 @@ class MultiGPUWorkUnitsNode(io.ComfyNode):
             description=cleandoc(cls.__doc__),
             inputs=[
                 io.Model.Input("model"),
-                io.Int.Input("max_gpus", default=8, min=1, step=1),
-                io.Custom("GPU_OPTIONS").Input("gpu_options", optional=True),
+                io.Int.Input("max_gpus", default=2, min=1, step=1),
             ],
             outputs=[
                 io.Model.Output(),
@@ -38,8 +37,8 @@ class MultiGPUWorkUnitsNode(io.ComfyNode):
         )
 
     @classmethod
-    def execute(cls, model: ModelPatcher, max_gpus: int, gpu_options: comfy.multigpu.GPUOptionsGroup = None) -> io.NodeOutput:
-        model = comfy.multigpu.create_multigpu_deepclones(model, max_gpus, gpu_options, reuse_loaded=True)
+    def execute(cls, model: ModelPatcher, max_gpus: int) -> io.NodeOutput:
+        model = comfy.multigpu.create_multigpu_deepclones(model, max_gpus, reuse_loaded=True)
         return io.NodeOutput(model)
 
 
@@ -82,7 +81,7 @@ class MultiGPUExtension(ComfyExtension):
     async def get_node_list(self) -> list[type[io.ComfyNode]]:
         return [
             MultiGPUWorkUnitsNode,
-            MultiGPUOptionsNode,
+            # MultiGPUOptionsNode,
         ]
 
 
