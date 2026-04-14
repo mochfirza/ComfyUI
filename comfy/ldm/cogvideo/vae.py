@@ -453,15 +453,21 @@ class AutoencoderKLCogVideoX(nn.Module):
     def encode(self, x):
         t = x.shape[2]
         frame_batch = self.num_sample_frames_batch_size
-        # ceil so remainder frames get their own chunk instead of inflating the first one
-        num_batches = max(-(-t // frame_batch), 1)
+        remainder = t % frame_batch
         conv_cache = None
         enc = []
-        for i in range(num_batches):
-            start = i * frame_batch
-            end = min((i + 1) * frame_batch, t)
-            chunk, conv_cache = self.encoder(x[:, :, start:end], conv_cache=conv_cache)
+
+        # Process remainder frames first so only the first chunk can have an
+        # odd temporal dimension — where Downsample3D's first-frame-special
+        # handling in temporal compression is actually correct.
+        if remainder > 0:
+            chunk, conv_cache = self.encoder(x[:, :, :remainder], conv_cache=conv_cache)
             enc.append(chunk.to(x.device))
+
+        for start in range(remainder, t, frame_batch):
+            chunk, conv_cache = self.encoder(x[:, :, start:start + frame_batch], conv_cache=conv_cache)
+            enc.append(chunk.to(x.device))
+
         enc = torch.cat(enc, dim=2)
         mean, _ = enc.chunk(2, dim=1)
         return mean
