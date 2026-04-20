@@ -413,9 +413,7 @@ class MultiCombo(ComfyTypeI):
                 "multi_select": prune_dict({
                     "placeholder": self.placeholder,
                     "chip": self.chip,
-                }) if self.multiselect else None,
-                "placeholder": self.placeholder,
-                "chip": self.chip,
+                }),
             })
 
 @comfytype(io_type="IMAGE")

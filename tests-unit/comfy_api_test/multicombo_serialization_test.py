@@ -31,5 +31,3 @@ def test_multicombo_serializes_multi_select_with_placeholder_and_chip():
         "placeholder": "Select providers",
         "chip": True,
     }
-    assert serialized["placeholder"] == "Select providers"
-    assert serialized["chip"] is True
